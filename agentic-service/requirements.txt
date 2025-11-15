@@ -1,0 +1,33 @@
+# FastAPI & ASGI server
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+pydantic==2.5.3
+pydantic-settings==2.1.0
+
+# LangChain & LangGraph for agentic workflows
+langchain==0.1.4
+langchain-openai==0.0.5
+langchain-community==0.0.16
+langgraph==0.0.20
+langsmith==0.0.83
+
+# OpenAI API
+openai==1.10.0
+
+# Hugging Face transformers & embeddings
+transformers==4.37.0
+sentence-transformers==2.3.1
+torch>=2.6.0
+
+# FAISS for vector search
+faiss-cpu==1.8.0
+
+# Database & ORM
+psycopg2-binary==2.9.9
+sqlalchemy==2.0.25
+sqlmodel==0.0.14
+
+# Utilities
+python-dotenv==1.0.0
+httpx==0.26.0
+tenacity==8.2.3

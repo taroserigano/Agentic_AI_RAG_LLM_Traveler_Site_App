@@ -1,0 +1,8 @@
+# Data directory for FAISS index and knowledge base
+
+This directory stores:
+- FAISS vector index files
+- Embedded knowledge chunks
+- Cached API responses
+
+Add `.env` variable `FAISS_INDEX_PATH=./data/faiss_index` to configure location.

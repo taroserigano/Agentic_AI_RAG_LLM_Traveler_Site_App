@@ -1,4 +1,4 @@
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: "2010-09-09"
 Description: >-
   Provision a PostgreSQL RDS instance, VPC networking, and security group for the
   GPTGenius Next.js app. Adjust parameter defaults before deployment.
@@ -22,12 +22,12 @@ Parameters:
   DBName:
     Type: String
     Default: gptgenius
-    AllowedPattern: '^[a-zA-Z][a-zA-Z0-9_]+$'
+    AllowedPattern: "^[a-zA-Z][a-zA-Z0-9_]+$"
     Description: Initial database name.
   MasterUsername:
     Type: String
     Default: app_user
-    AllowedPattern: '^[a-zA-Z][a-zA-Z0-9_]+$'
+    AllowedPattern: "^[a-zA-Z][a-zA-Z0-9_]+$"
     Description: Master database username.
   MasterUserPassword:
     Type: String
@@ -36,7 +36,7 @@ Parameters:
     Description: Master database user password.
   EngineVersion:
     Type: String
-    Default: '15.5'
+    Default: "15.5"
     Description: PostgreSQL engine version.
   BackupRetentionPeriod:
     Type: Number
@@ -46,23 +46,23 @@ Parameters:
     Description: Days to retain automatic backups (set 0 to disable).
   MultiAZ:
     Type: String
-    Default: 'false'
-    AllowedValues: ['true', 'false']
+    Default: "false"
+    AllowedValues: ["true", "false"]
     Description: Deploy standby instance in another AZ for HA.
   StorageEncrypted:
     Type: String
-    Default: 'true'
-    AllowedValues: ['true', 'false']
+    Default: "true"
+    AllowedValues: ["true", "false"]
     Description: Enable storage-level encryption.
   PubliclyAccessible:
     Type: String
-    Default: 'true'
-    AllowedValues: ['true', 'false']
+    Default: "true"
+    AllowedValues: ["true", "false"]
     Description: Allow public internet access (limit via CIDR).
   AutoMinorVersionUpgrade:
     Type: String
-    Default: 'true'
-    AllowedValues: ['true', 'false']
+    Default: "true"
+    AllowedValues: ["true", "false"]
     Description: Automatically apply minor version upgrades.
   AllowedIngressCidr:
     Type: String
@@ -91,10 +91,10 @@ Mappings:
       AZ2: us-west-2b
 
 Conditions:
-  UseMultiAZ: !Equals [!Ref MultiAZ, 'true']
-  UsePublicAccess: !Equals [!Ref PubliclyAccessible, 'true']
-  EnableStorageEncryption: !Equals [!Ref StorageEncrypted, 'true']
-  EnableAutoMinorUpgrade: !Equals [!Ref AutoMinorVersionUpgrade, 'true']
+  UseMultiAZ: !Equals [!Ref MultiAZ, "true"]
+  UsePublicAccess: !Equals [!Ref PubliclyAccessible, "true"]
+  EnableStorageEncryption: !Equals [!Ref StorageEncrypted, "true"]
+  EnableAutoMinorUpgrade: !Equals [!Ref AutoMinorVersionUpgrade, "true"]
 
 Resources:
   VPC:
@@ -105,14 +105,14 @@ Resources:
       EnableDnsSupport: true
       Tags:
         - Key: Name
-          Value: !Sub '${EnvironmentName}-vpc'
+          Value: !Sub "${EnvironmentName}-vpc"
 
   InternetGateway:
     Type: AWS::EC2::InternetGateway
     Properties:
       Tags:
         - Key: Name
-          Value: !Sub '${EnvironmentName}-igw'
+          Value: !Sub "${EnvironmentName}-igw"
 
   VPCGatewayAttachment:
     Type: AWS::EC2::VPCGatewayAttachment
@@ -126,7 +126,7 @@ Resources:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: !Sub '${EnvironmentName}-public-rt'
+          Value: !Sub "${EnvironmentName}-public-rt"
 
   PublicRoute:
     Type: AWS::EC2::Route
@@ -145,7 +145,7 @@ Resources:
       AvailabilityZone: !FindInMap [RegionMap, !Ref AWS::Region, AZ1]
       Tags:
         - Key: Name
-          Value: !Sub '${EnvironmentName}-public-a'
+          Value: !Sub "${EnvironmentName}-public-a"
 
   PublicSubnet2:
     Type: AWS::EC2::Subnet
@@ -156,7 +156,7 @@ Resources:
       AvailabilityZone: !FindInMap [RegionMap, !Ref AWS::Region, AZ2]
       Tags:
         - Key: Name
-          Value: !Sub '${EnvironmentName}-public-b'
+          Value: !Sub "${EnvironmentName}-public-b"
 
   SubnetRouteTableAssociationA:
     Type: AWS::EC2::SubnetRouteTableAssociation
@@ -182,7 +182,7 @@ Resources:
           CidrIp: !Ref AllowedIngressCidr
       Tags:
         - Key: Name
-          Value: !Sub '${EnvironmentName}-rds-sg'
+          Value: !Sub "${EnvironmentName}-rds-sg"
 
   DBSubnetGroup:
     Type: AWS::RDS::DBSubnetGroup
@@ -191,12 +191,12 @@ Resources:
       SubnetIds:
         - !Ref PublicSubnet1
         - !Ref PublicSubnet2
-      DBSubnetGroupName: !Sub '${EnvironmentName}-db-subnet'
+      DBSubnetGroupName: !Sub "${EnvironmentName}-db-subnet"
 
   PostgresInstance:
     Type: AWS::RDS::DBInstance
     Properties:
-      DBInstanceIdentifier: !Sub '${EnvironmentName}-postgres'
+      DBInstanceIdentifier: !Sub "${EnvironmentName}-postgres"
       Engine: postgres
       EngineVersion: !Ref EngineVersion
       MasterUsername: !Ref MasterUsername
