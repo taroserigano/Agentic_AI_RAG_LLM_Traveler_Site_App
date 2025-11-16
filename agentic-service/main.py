@@ -9,6 +9,7 @@ from typing import Optional, Dict, Any
 
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from config import settings
@@ -210,6 +211,34 @@ async def query_vault_documents(request: VaultQueryRequest):
     except Exception as exc:  # noqa: BLE001
         logger.error("Vault query failed", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Query failed: {str(exc)}") from exc
+
+
+@app.post("/api/v1/vault/query-stream")
+async def query_vault_documents_stream(request: VaultQueryRequest):
+    """
+    RAG query endpoint with streaming: retrieve chunks and stream OpenAI response.
+    Returns Server-Sent Events for progressive token display.
+    """
+    try:
+        logger.info(f"Vault streaming query from user {request.user_id}: {request.query}")
+        
+        return StreamingResponse(
+            vault_service.generate_answer_stream(
+                query=request.query,
+                user_id=request.user_id,
+                top_k=request.top_k,
+            ),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive",
+                "X-Accel-Buffering": "no",
+            },
+        )
+    
+    except Exception as exc:  # noqa: BLE001
+        logger.error("Vault streaming query failed", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Streaming query failed: {str(exc)}") from exc
 
 
 if __name__ == "__main__":

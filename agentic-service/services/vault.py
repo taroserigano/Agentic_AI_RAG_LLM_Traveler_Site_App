@@ -3,7 +3,8 @@ from __future__ import annotations
 
 import math
 from pathlib import Path
-from typing import Optional, Sequence, List, Dict, Any
+from typing import Optional, Sequence, List, Dict, Any, Generator
+import json
 
 from fastapi import UploadFile
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -237,3 +238,80 @@ Answer the question based on the context above. Include [Source N] citations."""
                 "citations": citations,
                 "error": str(e),
             }
+
+    def generate_answer_stream(
+        self,
+        query: str,
+        user_id: str,
+        top_k: int = 3,
+    ) -> Generator[str, None, None]:
+        """
+        RAG pipeline with streaming: retrieve chunks, stream OpenAI response.
+        Yields Server-Sent Event formatted messages.
+        """
+        # Retrieve relevant document chunks
+        chunks = self.query_documents(query, user_id, top_k)
+
+        if not chunks:
+            yield f"data: {json.dumps({'type': 'error', 'content': 'No documents found in your Knowledge Vault'})}\n\n"
+            return
+
+        # Build context and citations
+        context_parts = []
+        citations = []
+        seen_docs = set()
+
+        for idx, chunk in enumerate(chunks, 1):
+            context_parts.append(f"[Source {idx}] {chunk['text']}")
+            doc_key = (chunk["document_id"], chunk["title"])
+            if doc_key not in seen_docs:
+                citations.append({
+                    "title": chunk["title"],
+                    "document_id": chunk["document_id"],
+                })
+                seen_docs.add(doc_key)
+
+        # Send citations first
+        yield f"data: {json.dumps({'type': 'citations', 'content': citations})}\n\n"
+
+        context = "\n\n".join(context_parts)
+
+        # Stream answer from OpenAI
+        client = openai.OpenAI(api_key=settings.openai_api_key)
+        system_prompt = """You are a helpful travel assistant. Answer the user's question based on the provided context from their uploaded documents.
+
+IMPORTANT:
+- Only use information from the provided sources
+- If the context doesn't contain the answer, say so clearly
+- Cite sources using [Source N] format when referencing information
+- Be concise but comprehensive"""
+
+        user_prompt = f"""Context from user's documents:
+{context}
+
+User's question: {query}
+
+Answer the question based on the context above. Include [Source N] citations."""
+
+        try:
+            stream = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt},
+                ],
+                temperature=0.3,
+                max_tokens=500,
+                stream=True,
+            )
+
+            for chunk in stream:
+                if chunk.choices[0].delta.content:
+                    content = chunk.choices[0].delta.content
+                    yield f"data: {json.dumps({'type': 'token', 'content': content})}\n\n"
+
+            # Signal completion
+            yield f"data: {json.dumps({'type': 'done'})}\n\n"
+
+        except Exception as e:
+            yield f"data: {json.dumps({'type': 'error', 'content': str(e)})}\n\n"

@@ -202,3 +202,40 @@ export const updateKnowledgeDocument = async (id, data) => {
     data,
   });
 };
+
+export const deleteKnowledgeDocument = async (id) => {
+  return prisma.knowledgeDocument.delete({
+    where: { id },
+  });
+};
+
+export const getChatSessions = async (userId) => {
+  if (!userId) return [];
+  return prisma.ChatSession.findMany({
+    where: { userId },
+    orderBy: { updatedAt: "desc" },
+  });
+};
+
+export const createChatSession = async (userId, title = "New Chat") => {
+  return prisma.ChatSession.create({
+    data: {
+      userId,
+      title,
+      messages: [],
+    },
+  });
+};
+
+export const updateChatSession = async (id, data) => {
+  return prisma.ChatSession.update({
+    where: { id },
+    data,
+  });
+};
+
+export const deleteChatSession = async (id) => {
+  return prisma.ChatSession.delete({
+    where: { id },
+  });
+};

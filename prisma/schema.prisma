@@ -48,6 +48,22 @@ model KnowledgeDocument {
   error         String?
   notes         String?
   sourceUrl     String?
+  
+  chatSessions  ChatSession[]
 
   @@index([userId])
+}
+
+model ChatSession {
+  id          String   @id @default(uuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  userId      String
+  title       String   @default("New Chat")
+  messages    Json     // Array of {role, content, citations}
+  
+  documents   KnowledgeDocument[]
+
+  @@index([userId])
+  @@index([createdAt])
 }
