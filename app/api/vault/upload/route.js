@@ -93,13 +93,21 @@ export async function POST(request) {
       notes,
     });
 
+    // Build update data
+    const updateData = {
+      status: "PROCESSED",
+      chunkCount: ingestionResult.chunkCount ?? 0,
+      tokenEstimate: ingestionResult.tokenEstimate ?? 0,
+    };
+    
+    // Add filePath if provided by backend
+    if (ingestionResult.filePath) {
+      updateData.filePath = ingestionResult.filePath;
+    }
+    
     const updated = await prisma.knowledgeDocument.update({
       where: { id: documentRecord.id },
-      data: {
-        status: "PROCESSED",
-        chunkCount: ingestionResult.chunkCount ?? 0,
-        tokenEstimate: ingestionResult.tokenEstimate ?? 0,
-      },
+      data: updateData,
     });
 
     return NextResponse.json(

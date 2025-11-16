@@ -21,7 +21,9 @@ class VaultIngestionService:
     """Handles file storage, text extraction, chunking, and FAISS persistence."""
 
     def __init__(self) -> None:
-        self.upload_dir = Path("data/uploads")
+        # Use absolute path based on this file's location
+        base_dir = Path(__file__).parent.parent
+        self.upload_dir = base_dir / "data" / "uploads"
         self.upload_dir.mkdir(parents=True, exist_ok=True)
 
         self.index_dir = Path(settings.faiss_index_path)
@@ -73,10 +75,14 @@ class VaultIngestionService:
         store.save_local(str(self.index_dir))
         token_estimate = math.ceil(len(raw_text) / 4)
 
+        # Store relative path from upload_dir for portability
+        relative_path = saved_path.relative_to(self.upload_dir)
+        
         return {
             "documentId": document_id,
             "chunkCount": len(chunks),
             "tokenEstimate": token_estimate,
+            "filePath": str(relative_path),
             "message": "Document ingested and indexed.",
         }
 

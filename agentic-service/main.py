@@ -5,9 +5,10 @@ Exposes endpoints for multi-agent itinerary generation.
 import logging
 import sys
 import typing
+from pathlib import Path
 from typing import Optional, Dict, Any
 
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
@@ -90,6 +91,7 @@ class VaultUploadResponse(BaseModel):
     documentId: str
     chunkCount: int
     tokenEstimate: int
+    filePath: str
     message: str
 
 
@@ -239,6 +241,115 @@ async def query_vault_documents_stream(request: VaultQueryRequest):
     except Exception as exc:  # noqa: BLE001
         logger.error("Vault streaming query failed", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Streaming query failed: {str(exc)}") from exc
+
+
+class VaultPreviewResponse(BaseModel):
+    """Response schema for document preview."""
+    content: str
+    content_type: str
+    filename: str
+
+
+@app.get("/api/v1/vault/preview/{document_id}")
+async def preview_vault_document(
+    document_id: str, 
+    user_id: str = Query(...),
+    filePath: Optional[str] = Query(None),
+    filename: Optional[str] = Query(None)
+):
+    """
+    Retrieve document content for preview.
+    Returns extracted text content from PDF/DOCX/TXT files.
+    """
+    try:
+        logger.info(f"Preview request for document {document_id} by user {user_id}")
+        
+        file_path = None
+        
+        upload_dir = vault_service.upload_dir.resolve()
+        
+        # First, try to use the stored filePath from database (most reliable)
+        if filePath:
+            file_path = Path(filePath)
+            if not file_path.is_absolute():
+                # If relative path, resolve relative to upload_dir
+                file_path = upload_dir / file_path
+            logger.info(f"Using stored filePath: {file_path}")
+            # Verify it exists
+            if not file_path.exists():
+                logger.warning(f"Stored filePath does not exist: {file_path}, trying fallback methods")
+                file_path = None
+        
+        # If filePath not provided or didn't work, try to construct from filename
+        if not file_path and filename:
+            expected_path = upload_dir / f"{document_id}_{filename}"
+            logger.info(f"Trying filename-based path: {expected_path}")
+            if expected_path.exists() and expected_path.is_file():
+                file_path = expected_path
+                logger.info(f"Found file using filename: {file_path}")
+            else:
+                logger.warning(f"Filename-based path does not exist: {expected_path}")
+        
+        # Last resort: pattern matching
+        if not file_path:
+            if not upload_dir.exists():
+                logger.error(f"Upload directory does not exist: {upload_dir}")
+                raise HTTPException(status_code=404, detail="Upload directory not found")
+            
+            logger.info(f"Trying pattern matching for: {document_id}_* in {upload_dir}")
+            matching_files = list(upload_dir.glob(f"{document_id}_*"))
+            logger.info(f"Found {len(matching_files)} matching files: {[str(f) for f in matching_files]}")
+            if matching_files:
+                file_path = matching_files[0]
+                logger.info(f"Found file using pattern matching: {file_path}")
+        
+        if not file_path:
+            logger.warning(f"No files found for document_id: {document_id}")
+            raise HTTPException(status_code=404, detail=f"Document file not found for ID: {document_id}")
+        
+        # Verify file exists and is readable
+        if not file_path.exists():
+            logger.error(f"File path does not exist: {file_path}")
+            raise HTTPException(status_code=404, detail="Document file not found")
+        
+        if not file_path.is_file():
+            logger.error(f"Path is not a file: {file_path}")
+            raise HTTPException(status_code=404, detail="Document file not found")
+        
+        logger.info(f"Found document file: {file_path}")
+        
+        # Extract text content based on file type
+        try:
+            content = vault_service._extract_text(file_path, None)
+            if not content or not content.strip():
+                logger.warning(f"Extracted content is empty for file: {file_path}")
+                content = "(Document content is empty or could not be extracted)"
+        except Exception as extract_error:
+            logger.error(f"Error extracting text from {file_path}: {extract_error}", exc_info=True)
+            raise HTTPException(
+                status_code=500, 
+                detail=f"Failed to extract text from document: {str(extract_error)}"
+            ) from extract_error
+        
+        content_type = "text/plain"
+        
+        # Determine content type for display
+        if file_path.suffix.lower() == ".pdf":
+            content_type = "application/pdf"
+        elif file_path.suffix.lower() == ".docx":
+            content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        
+        return VaultPreviewResponse(
+            content=content,
+            content_type=content_type,
+            filename=file_path.name
+        )
+    
+    except HTTPException:
+        raise
+    except Exception as exc:  # noqa: BLE001
+        logger.error("Vault preview failed", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Preview failed: {str(exc)}") from exc
 
 
 if __name__ == "__main__":

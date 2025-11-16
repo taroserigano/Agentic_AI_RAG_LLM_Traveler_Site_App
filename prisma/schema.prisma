@@ -40,6 +40,7 @@ model KnowledgeDocument {
   userId        String
   title         String
   filename      String
+  filePath      String?          // Path to the stored file on the backend
   mimeType      String
   size          Int
   chunkCount    Int             @default(0)

@@ -43,6 +43,9 @@ const KnowledgeVault = ({ userId, initialDocuments }) => {
   // Document preview modal
   const [previewDocument, setPreviewDocument] = useState(null);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [previewContent, setPreviewContent] = useState(null);
+  const [isLoadingPreview, setIsLoadingPreview] = useState(false);
+  const [previewError, setPreviewError] = useState(null);
 
   // Load chat sessions on mount
   useEffect(() => {
@@ -324,8 +327,26 @@ const KnowledgeVault = ({ userId, initialDocuments }) => {
     try {
       setPreviewDocument(doc);
       setShowPreviewModal(true);
+      setPreviewContent(null);
+      setPreviewError(null);
+      setIsLoadingPreview(true);
+
+      // Fetch document content
+      const response = await fetch(`/api/vault/documents/${doc.id}/preview`);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to load document preview");
+      }
+
+      const data = await response.json();
+      setPreviewContent(data.content);
     } catch (error) {
+      console.error("Preview error:", error);
+      setPreviewError(error.message);
       toast.error("Failed to load document preview");
+    } finally {
+      setIsLoadingPreview(false);
     }
   };
 
@@ -827,12 +848,12 @@ const KnowledgeVault = ({ userId, initialDocuments }) => {
       {/* Document Preview Modal */}
       {showPreviewModal && previewDocument && (
         <div className="modal modal-open">
-          <div className="modal-box max-w-4xl">
+          <div className="modal-box max-w-5xl max-h-[90vh] flex flex-col">
             <h3 className="font-bold text-lg mb-4">
               📄 {previewDocument.title}
             </h3>
             
-            <div className="space-y-4">
+            <div className="space-y-4 flex-1 overflow-y-auto">
               {/* Document Metadata */}
               <div className="bg-base-200 rounded-lg p-4">
                 <div className="grid grid-cols-2 gap-4 text-sm">
@@ -884,6 +905,44 @@ const KnowledgeVault = ({ userId, initialDocuments }) => {
                     >
                       {previewDocument.sourceUrl}
                     </a>
+                  </div>
+                )}
+              </div>
+
+              {/* Document Content Preview */}
+              <div className="bg-base-100 border border-base-300 rounded-lg p-4">
+                <h4 className="font-semibold mb-3">Document Content:</h4>
+                {isLoadingPreview ? (
+                  <div className="flex items-center justify-center py-8">
+                    <span className="loading loading-spinner loading-lg"></span>
+                    <span className="ml-2">Loading document...</span>
+                  </div>
+                ) : previewError ? (
+                  <div className="alert alert-error">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="stroke-current shrink-0 h-6 w-6"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    <span>{previewError}</span>
+                  </div>
+                ) : previewContent ? (
+                  <div className="max-h-96 overflow-y-auto">
+                    <pre className="whitespace-pre-wrap text-sm font-mono bg-base-200 p-4 rounded border">
+                      {previewContent}
+                    </pre>
+                  </div>
+                ) : (
+                  <div className="text-center text-base-content/50 py-8">
+                    <p>No content available</p>
                   </div>
                 )}
               </div>
@@ -941,6 +1000,8 @@ const KnowledgeVault = ({ userId, initialDocuments }) => {
                 onClick={() => {
                   setShowPreviewModal(false);
                   setPreviewDocument(null);
+                  setPreviewContent(null);
+                  setPreviewError(null);
                 }}
               >
                 Close
