@@ -413,6 +413,77 @@ const TravelAgent = ({ userId }) => {
                     </div>
                   )}
 
+                  {/* Daily Plans - Hour by Hour Schedule */}
+                  {itinerary.tour.daily_plans && itinerary.tour.daily_plans.length > 0 && (
+                    <div className="mt-6">
+                      <h4 className="font-semibold text-lg mb-4">📅 Detailed Daily Plans (7 AM - 8 PM)</h4>
+                      <div className="space-y-6">
+                        {itinerary.tour.daily_plans.map((dayPlan, dayIdx) => (
+                          <div key={dayIdx} className="collapse collapse-arrow bg-base-200">
+                            <input type="checkbox" defaultChecked={dayIdx === 0} />
+                            <div className="collapse-title text-lg font-semibold">
+                              <div className="flex items-center justify-between">
+                                <span>
+                                  Day {dayPlan.day}: {dayPlan.theme}
+                                </span>
+                                <span className="text-sm opacity-70 mr-4">
+                                  {dayPlan.total_activities || dayPlan.plan?.length || 0} activities
+                                </span>
+                              </div>
+                            </div>
+                            <div className="collapse-content">
+                              <div className="space-y-3 pt-2">
+                                {/* Timeline of activities */}
+                                {dayPlan.plan && dayPlan.plan.map((activity, actIdx) => (
+                                  <div key={actIdx} className="flex gap-4 items-start">
+                                    <div className="flex-shrink-0 w-20 text-right">
+                                      <span className="badge badge-primary badge-sm">
+                                        {activity.time}
+                                      </span>
+                                    </div>
+                                    <div className="flex-grow bg-base-100 p-3 rounded-lg">
+                                      <div className="font-semibold">{activity.activity}</div>
+                                      <div className="text-sm opacity-70 flex items-center gap-1 mt-1">
+                                        <span>📍</span>
+                                        <span>{activity.location}</span>
+                                      </div>
+                                      {activity.duration && (
+                                        <div className="text-xs opacity-60 mt-1">
+                                          ⏱️ {activity.duration}
+                                        </div>
+                                      )}
+                                      {activity.notes && (
+                                        <div className="text-sm mt-2 opacity-80">
+                                          💡 {activity.notes}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))}
+
+                                {/* Day summary */}
+                                {(dayPlan.estimated_walking || dayPlan.tips) && (
+                                  <div className="bg-info bg-opacity-10 p-3 rounded-lg mt-4">
+                                    {dayPlan.estimated_walking && (
+                                      <div className="text-sm">
+                                        <strong>🚶 Walking:</strong> {dayPlan.estimated_walking}
+                                      </div>
+                                    )}
+                                    {dayPlan.tips && (
+                                      <div className="text-sm mt-2">
+                                        <strong>💡 Tip:</strong> {dayPlan.tips}
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Real Travel Data from Amadeus */}
                   {itinerary.tour.real_data && itinerary.tour.real_data.has_real_data && (
                     <div className="mt-4">

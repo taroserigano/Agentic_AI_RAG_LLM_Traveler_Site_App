@@ -131,6 +131,23 @@ Return your response as a structured JSON object with this format:
       ]
     }
   ],
+  "daily_plans": [
+    {
+      "day": 1,
+      "date": "Day 1",
+      "theme": "Day theme",
+      "plan": [
+        {"time": "7:00 AM", "activity": "Wake up and breakfast", "location": "Hotel/Cafe Name, City", "duration": "1 hour", "notes": "Start your day"},
+        {"time": "8:00 AM", "activity": "Morning activity", "location": "Place Name, City", "duration": "2 hours", "notes": "Details"},
+        {"time": "12:00 PM", "activity": "Lunch", "location": "Restaurant Name, City", "duration": "1.5 hours", "notes": "Try local cuisine"},
+        {"time": "2:00 PM", "activity": "Afternoon activity", "location": "Place Name, City", "duration": "2 hours", "notes": "Details"},
+        {"time": "6:00 PM", "activity": "Dinner", "location": "Restaurant Name, City", "duration": "2 hours", "notes": "Evening meal"}
+      ],
+      "total_activities": 5,
+      "estimated_walking": "5 km",
+      "tips": "Wear comfortable shoes"
+    }
+  ],
   "highlights": ["Specific attraction 1", "Specific attraction 2"],
   "local_tips": ["Tip 1", "Tip 2"],
   "compliance": {
@@ -162,6 +179,14 @@ Please create a comprehensive itinerary that:
 7. NEVER repeats the same location twice in the itinerary
 8. Keep locations concise - NO full street addresses, postal codes, or detailed address info
 9. Each location must be a specific, named place (museum, restaurant, store, landmark)
+
+IMPORTANT: Create a detailed "daily_plans" section for EACH day with:
+- Hour-by-hour schedule from 7:00 AM to 8:00 PM
+- Include breakfast (7-8 AM), lunch (12-1:30 PM), dinner (6-8 PM)
+- Morning activities (8 AM - 12 PM), afternoon activities (2 PM - 6 PM)
+- Each activity should have: time, activity name, specific location, duration, and helpful notes
+- Include estimated walking distances and practical tips for each day
+- Make sure every time slot is filled with something meaningful
 
 Return the itinerary as JSON following the specified format."""
             
@@ -235,6 +260,7 @@ Return the itinerary as JSON following the specified format."""
                 "image": "https://source.unsplash.com/800x600/?travel," + city.lower().replace(" ", "-"),
                 "stops": stops[:10],  # Limit to 10 stops for display
                 "daily_schedule": itinerary_data.get("daily_schedule", []),
+                "daily_plans": itinerary_data.get("daily_plans", []),  # NEW: Detailed hour-by-hour plans
                 "compliance": itinerary_data.get("compliance", {}),
                 "research": {
                     "highlights": itinerary_data.get("highlights", []),
