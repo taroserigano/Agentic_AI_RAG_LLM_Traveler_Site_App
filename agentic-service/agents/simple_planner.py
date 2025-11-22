@@ -148,6 +148,7 @@ Return your response as a structured JSON object with this format:
       "tips": "Wear comfortable shoes"
     }
   ],
+  "top_10_places": ["Must-visit place 1", "Must-visit place 2", "Must-visit place 3", "Must-visit place 4", "Must-visit place 5", "Must-visit place 6", "Must-visit place 7", "Must-visit place 8", "Must-visit place 9", "Must-visit place 10"],
   "highlights": ["Specific attraction 1", "Specific attraction 2"],
   "local_tips": ["Tip 1", "Tip 2"],
   "compliance": {
@@ -180,13 +181,20 @@ Please create a comprehensive itinerary that:
 8. Keep locations concise - NO full street addresses, postal codes, or detailed address info
 9. Each location must be a specific, named place (museum, restaurant, store, landmark)
 
-IMPORTANT: Create a detailed "daily_plans" section for EACH day with:
-- Hour-by-hour schedule from 7:00 AM to 8:00 PM
-- Include breakfast (7-8 AM), lunch (12-1:30 PM), dinner (6-8 PM)
-- Morning activities (8 AM - 12 PM), afternoon activities (2 PM - 6 PM)
-- Each activity should have: time, activity name, specific location, duration, and helpful notes
-- Include estimated walking distances and practical tips for each day
-- Make sure every time slot is filled with something meaningful
+IMPORTANT: 
+1. Create a "top_10_places" array with EXACTLY 10 must-visit places/attractions in {city}
+   - These should be the absolute best places a tourist should visit
+   - Include famous landmarks, museums, restaurants, viewpoints, parks, etc.
+   - Format each as "Place Name, City" (e.g., "Sagrada Familia, Barcelona")
+   - Make sure all 10 are unique and different from each other
+
+2. Create a detailed "daily_plans" section for EACH day with:
+   - Hour-by-hour schedule from 7:00 AM to 8:00 PM
+   - Include breakfast (7-8 AM), lunch (12-1:30 PM), dinner (6-8 PM)
+   - Morning activities (8 AM - 12 PM), afternoon activities (2 PM - 6 PM)
+   - Each activity should have: time, activity name, specific location, duration, and helpful notes
+   - Include estimated walking distances and practical tips for each day
+   - Make sure every time slot is filled with something meaningful
 
 Return the itinerary as JSON following the specified format."""
             
@@ -234,23 +242,29 @@ Return the itinerary as JSON following the specified format."""
                     }
                 }
             
-            # Convert to expected format - collect unique stops only
+            # Use top_10_places if available, otherwise collect from activities
             stops = []
-            seen_locations = set()
-            for day in itinerary_data.get("daily_schedule", []):
-                for activity in day.get("activities", []):
-                    location = activity.get("location", activity.get("activity", "Activity"))
-                    # Only add if we haven't seen this location before
-                    if location and location.lower() not in seen_locations:
-                        stops.append(location)
-                        seen_locations.add(location.lower())
-            
-            # Add highlights as stops if we don't have many (also checking for duplicates)
-            if len(stops) < 5:
-                for highlight in itinerary_data.get("highlights", [])[:5]:
-                    if highlight and highlight.lower() not in seen_locations:
-                        stops.append(highlight)
-                        seen_locations.add(highlight.lower())
+            if itinerary_data.get("top_10_places"):
+                # Use the curated top 10 places list
+                stops = itinerary_data["top_10_places"][:10]
+            else:
+                # Fallback: collect unique stops from activities
+                seen_locations = set()
+                for day in itinerary_data.get("daily_schedule", []):
+                    for activity in day.get("activities", []):
+                        location = activity.get("location", activity.get("activity", "Activity"))
+                        if location and location.lower() not in seen_locations:
+                            stops.append(location)
+                            seen_locations.add(location.lower())
+                
+                # Add highlights if we don't have enough
+                if len(stops) < 10:
+                    for highlight in itinerary_data.get("highlights", [])[:10]:
+                        if highlight and highlight.lower() not in seen_locations:
+                            stops.append(highlight)
+                            seen_locations.add(highlight.lower())
+                            if len(stops) >= 10:
+                                break
             
             tour = {
                 "city": city,
