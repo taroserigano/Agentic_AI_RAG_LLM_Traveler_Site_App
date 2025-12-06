@@ -30,6 +30,36 @@ const SavedTripsPage = () => {
     }
   };
 
+  const handleDeleteTrip = async (tripId, e) => {
+    e.stopPropagation(); // Prevent card click event
+    
+    if (!confirm("Are you sure you want to delete this trip?")) {
+      return;
+    }
+
+    try {
+      console.log("Attempting to delete trip with ID:", tripId);
+      const response = await fetch(`/api/travel/planner/saved/${tripId}`, {
+        method: "DELETE",
+      });
+
+      console.log("Delete response status:", response.status);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Delete error:", errorData);
+        throw new Error(errorData.error || "Failed to delete trip");
+      }
+
+      toast.success("Trip deleted successfully!");
+      // Remove from local state
+      setTrips(trips.filter((trip) => trip.id !== tripId));
+    } catch (error) {
+      console.error("Error deleting trip:", error);
+      toast.error(error.message || "Failed to delete trip");
+    }
+  };
+
   const handleViewTrip = (trip) => {
     setSelectedTrip(trip);
   };
@@ -62,8 +92,7 @@ const SavedTripsPage = () => {
             </button>
             <h1 className="text-4xl font-bold">{selectedTrip.title}</h1>
             <p className="text-base-content/70 mt-2">
-              {selectedTrip.destination}, {selectedTrip.country} •{" "}
-              {selectedTrip.days} days
+              <span className="capitalize">{selectedTrip.destination}</span> • {selectedTrip.days} {selectedTrip.days === 1 ? 'day' : 'days'}
             </p>
           </div>
         </div>
@@ -254,13 +283,13 @@ const SavedTripsPage = () => {
                   <div className="space-y-2 text-sm">
                     <p className="flex items-center gap-2">
                       <span>📍</span>
-                      <span>
-                        {trip.destination}, {trip.country}
+                      <span className="capitalize">
+                        {trip.destination}
                       </span>
                     </p>
                     <p className="flex items-center gap-2">
                       <span>📅</span>
-                      <span>{trip.days} days</span>
+                      <span>{trip.days} {trip.days === 1 ? 'day' : 'days'}</span>
                     </p>
                     {trip.checkIn && trip.checkOut && (
                       <p className="flex items-center gap-2">
@@ -281,7 +310,13 @@ const SavedTripsPage = () => {
                   <div className="text-xs text-base-content/60 mt-3">
                     Saved on {new Date(trip.createdAt).toLocaleDateString()}
                   </div>
-                  <div className="card-actions justify-end mt-4">
+                  <div className="card-actions justify-between mt-4">
+                    <button
+                      onClick={(e) => handleDeleteTrip(trip.id, e)}
+                      className="btn btn-error btn-sm btn-outline"
+                    >
+                      🗑️ Delete
+                    </button>
                     <button className="btn btn-primary btn-sm">
                       View Details →
                     </button>

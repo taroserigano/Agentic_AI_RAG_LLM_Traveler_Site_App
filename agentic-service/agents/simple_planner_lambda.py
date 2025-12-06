@@ -174,6 +174,15 @@ Return your response as a structured JSON object with this format:
     }
   ],
   "top_10_places": ["Must-visit place 1", "Must-visit place 2", "Must-visit place 3", "Must-visit place 4", "Must-visit place 5", "Must-visit place 6", "Must-visit place 7", "Must-visit place 8", "Must-visit place 9", "Must-visit place 10"],
+  "recommended_hotels": [
+    {
+      "name": "Hotel Name",
+      "price_range": "$$-$$$",
+      "rating": 4.5,
+      "address": "Street Address, City",
+      "description": "Brief description highlighting key features and why it's recommended"
+    }
+  ],
   "highlights": ["Specific attraction 1", "Specific attraction 2"],
   "local_tips": ["Tip 1", "Tip 2"],
   "compliance": {
@@ -213,13 +222,21 @@ IMPORTANT:
    - Format each as "Place Name, City" (e.g., "Sagrada Familia, Barcelona")
    - Make sure all 10 are unique and different from each other
 
-2. Create a detailed "daily_plans" section for EACH day with:
+2. Create a "recommended_hotels" array with EXACTLY 3 best hotels for this destination:
+   - Include hotel name, price_range ($ to $$$$), rating (out of 5), address, and description
+   - Choose hotels with different price points (luxury, mid-range, budget-friendly)
+   - Provide realistic ratings and helpful descriptions about amenities, location benefits
+   - Example: {{"name": "The Ritz Carlton", "price_range": "$$$$", "rating": 4.8, "address": "123 Main St, City", "description": "Luxury waterfront hotel with spa, rooftop bar, and Michelin-star restaurant"}}
+
+3. Create a detailed "daily_plans" section for EACH day with:
    - Hour-by-hour schedule from 7:00 AM to 8:00 PM
    - Include breakfast (7-8 AM), lunch (12-1:30 PM), dinner (6-8 PM)
    - Morning activities (8 AM - 12 PM), afternoon activities (2 PM - 6 PM)
    - Each activity should have: time, activity name, specific location, duration, and helpful notes
    - Include estimated walking distances and practical tips for each day
    - Make sure every time slot is filled with something meaningful
+
+CRITICAL: You MUST include the "recommended_hotels" array with exactly 3 hotels. This is required. Do not skip this field.
 
 Return the itinerary as JSON following the specified format."""
             
@@ -291,6 +308,34 @@ Return the itinerary as JSON following the specified format."""
                             if len(stops) >= 10:
                                 break
             
+            # Ensure recommended_hotels exists, generate fallback if missing
+            recommended_hotels = itinerary_data.get("recommended_hotels", [])
+            if not recommended_hotels:
+                logger.warning(f"[{run_id}] No hotels in LLM response, generating fallback")
+                recommended_hotels = [
+                    {
+                        "name": f"Premium Hotel {city}",
+                        "price_range": "$$$$",
+                        "rating": 4.5,
+                        "address": f"Downtown {city}, {country}",
+                        "description": f"Luxury accommodations in the heart of {city} with premium amenities, rooftop dining, and spa facilities."
+                    },
+                    {
+                        "name": f"Comfort Inn {city}",
+                        "price_range": "$$",
+                        "rating": 4.0,
+                        "address": f"Central {city}, {country}",
+                        "description": f"Modern mid-range hotel offering excellent value with comfortable rooms, complimentary breakfast, and convenient location."
+                    },
+                    {
+                        "name": f"Budget Stay {city}",
+                        "price_range": "$",
+                        "rating": 3.5,
+                        "address": f"{city} City Center, {country}",
+                        "description": f"Clean and affordable accommodations perfect for budget travelers, with basic amenities and friendly service."
+                    }
+                ]
+            
             tour = {
                 "city": city,
                 "country": country,
@@ -300,6 +345,7 @@ Return the itinerary as JSON following the specified format."""
                 "stops": stops[:10],  # Limit to 10 stops for display
                 "daily_schedule": itinerary_data.get("daily_schedule", []),
                 "daily_plans": itinerary_data.get("daily_plans", []),  # NEW: Detailed hour-by-hour plans
+                "recommended_hotels": recommended_hotels,  # LLM-generated or fallback hotels
                 "compliance": itinerary_data.get("compliance", {}),
                 "research": {
                     "highlights": itinerary_data.get("highlights", []),

@@ -98,8 +98,8 @@ const TravelPlanner = ({ userId }) => {
           checkOut,
           preferences: Object.keys(preferences).filter((k) => preferences[k]),
           itinerary: tripData.itinerary,
-          hotels: tripData.hotels,
-          heroImage: tripData.heroImage,
+          hotels: tripData.itinerary?.recommended_hotels || [],
+          heroImage: tripData.itinerary?.hero_image?.regular || null,
         }),
       });
 
@@ -269,8 +269,14 @@ const TravelPlanner = ({ userId }) => {
   };
 
   const renderRecommendedHotels = () => {
-    // Show top 5 hotels from the response
-    const hotels = tripData?.hotels?.slice(0, 5) || [];
+    // Get LLM-generated recommended hotels (top 3)
+    const hotels = tripData?.itinerary?.recommended_hotels || [];
+
+    console.log('Hotel data check:', {
+      hasItinerary: !!tripData?.itinerary,
+      recommendedHotels: tripData?.itinerary?.recommended_hotels,
+      hotelsLength: hotels.length
+    });
 
     if (!hotels.length) {
       return (
@@ -285,66 +291,40 @@ const TravelPlanner = ({ userId }) => {
     return (
       <div>
         <h3 className="text-2xl font-bold mb-6">🏨 Recommended Hotels</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {hotels.map((hotel, idx) => (
             <div
               key={idx}
-              className="card bg-base-100 shadow-xl border border-base-300"
+              className="card bg-base-100 shadow-xl border border-base-300 hover:shadow-2xl transition-shadow"
             >
               <div className="card-body">
-                <div className="flex items-start justify-between mb-2">
+                <div className="flex items-start justify-between mb-3">
                   <h3 className="card-title text-lg">{hotel.name}</h3>
-                  {hotel.rating && (
-                    <div className="badge badge-primary">{hotel.rating}⭐</div>
-                  )}
+                  <div className="badge badge-primary gap-1">
+                    {hotel.rating} ⭐
+                  </div>
                 </div>
 
-                {hotel.address && (
-                  <div className="text-sm mb-3">
-                    <p className="flex items-start gap-2">
-                      <span>📍</span>
-                      <span>
-                        {hotel.address.lines?.join(", ")}
-                        <br />
-                        {hotel.address.cityName}, {hotel.address.countryCode}
-                      </span>
-                    </p>
+                {/* Price Range */}
+                <div className="mb-3">
+                  <div className="text-2xl font-bold text-primary">
+                    {hotel.price_range}
                   </div>
-                )}
-
-                {hotel.price && (
-                  <div className="mt-3 p-3 bg-primary/10 rounded-lg">
-                    <div className="text-2xl font-bold text-primary">
-                      {hotel.price.currency} {hotel.price.total}
-                    </div>
-                    <div className="text-sm text-base-content/70">
-                      per night
-                    </div>
+                  <div className="text-xs text-base-content/60">
+                    Price range per night
                   </div>
-                )}
-
-                {hotel.amenities && hotel.amenities.length > 0 && (
-                  <div className="mt-3">
-                    <div className="flex flex-wrap gap-1">
-                      {hotel.amenities.slice(0, 3).map((amenity, i) => (
-                        <span key={i} className="badge badge-sm badge-outline">
-                          {amenity}
-                        </span>
-                      ))}
-                      {hotel.amenities.length > 3 && (
-                        <span className="badge badge-sm">
-                          +{hotel.amenities.length - 3} more
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                <div className="card-actions justify-end mt-4">
-                  <button className="btn btn-primary btn-sm">
-                    View Details
-                  </button>
                 </div>
+
+                {/* Address */}
+                <div className="text-sm mb-3 flex gap-2">
+                  <span className="text-base-content/50">📍</span>
+                  <span className="text-base-content/70">{hotel.address}</span>
+                </div>
+
+                {/* Description */}
+                <p className="text-sm text-base-content/70 line-clamp-3">
+                  {hotel.description}
+                </p>
               </div>
             </div>
           ))}
