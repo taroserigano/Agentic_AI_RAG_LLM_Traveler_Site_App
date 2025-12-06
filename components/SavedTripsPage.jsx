@@ -32,7 +32,7 @@ const SavedTripsPage = () => {
 
   const handleDeleteTrip = async (tripId, e) => {
     e.stopPropagation(); // Prevent card click event
-    
+
     if (!confirm("Are you sure you want to delete this trip?")) {
       return;
     }
@@ -44,7 +44,7 @@ const SavedTripsPage = () => {
       });
 
       console.log("Delete response status:", response.status);
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         console.error("Delete error:", errorData);
@@ -92,7 +92,8 @@ const SavedTripsPage = () => {
             </button>
             <h1 className="text-4xl font-bold">{selectedTrip.title}</h1>
             <p className="text-base-content/70 mt-2">
-              <span className="capitalize">{selectedTrip.destination}</span> • {selectedTrip.days} {selectedTrip.days === 1 ? 'day' : 'days'}
+              <span className="capitalize">{selectedTrip.destination}</span> •{" "}
+              {selectedTrip.days} {selectedTrip.days === 1 ? "day" : "days"}
             </p>
           </div>
         </div>
@@ -283,13 +284,13 @@ const SavedTripsPage = () => {
                   <div className="space-y-2 text-sm">
                     <p className="flex items-center gap-2">
                       <span>📍</span>
-                      <span className="capitalize">
-                        {trip.destination}
-                      </span>
+                      <span className="capitalize">{trip.destination}</span>
                     </p>
                     <p className="flex items-center gap-2">
                       <span>📅</span>
-                      <span>{trip.days} {trip.days === 1 ? 'day' : 'days'}</span>
+                      <span>
+                        {trip.days} {trip.days === 1 ? "day" : "days"}
+                      </span>
                     </p>
                     {trip.checkIn && trip.checkOut && (
                       <p className="flex items-center gap-2">

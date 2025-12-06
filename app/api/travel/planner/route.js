@@ -5,7 +5,16 @@ const AGENTIC_SERVICE_URL =
   process.env.AGENTIC_SERVICE_URL || "http://localhost:8000";
 
 export async function POST(request) {
-  const { userId } = auth();
+  // Allow a local bypass for auth when DEV_BYPASS_AUTH=1 is set (for testing only)
+  let userId;
+  const devBypass = process.env.DEV_BYPASS_AUTH === "1";
+  if (devBypass) {
+    userId = "dev-user";
+    console.log("DEV_BYPASS_AUTH=1 -> bypassing Clerk auth for local testing");
+  } else {
+    const authResult = auth();
+    userId = authResult.userId;
+  }
 
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -22,6 +31,9 @@ export async function POST(request) {
       checkOut,
       preferences,
     } = body;
+
+    // Log preferences for debugging/testing
+    console.log("Received planner request. Preferences:", preferences);
 
     if (!destination || !days) {
       return NextResponse.json(

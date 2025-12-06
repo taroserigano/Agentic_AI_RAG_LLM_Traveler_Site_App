@@ -7,10 +7,8 @@ const TravelPlanner = ({ userId }) => {
   // Form state
   const [destination, setDestination] = useState("");
   const [country, setCountry] = useState("");
-  const [days, setDays] = useState(7);
+  const [days, setDays] = useState(2);
   const [budget, setBudget] = useState("");
-  const [checkIn, setCheckIn] = useState("");
-  const [checkOut, setCheckOut] = useState("");
   const [preferences, setPreferences] = useState({
     adventure: false,
     relaxation: false,
@@ -58,9 +56,7 @@ const TravelPlanner = ({ userId }) => {
           country,
           days,
           budget,
-          checkIn,
-          checkOut,
-          preferences: Object.keys(preferences).filter((k) => preferences[k]),
+          preferences,
         }),
       });
 
@@ -94,9 +90,7 @@ const TravelPlanner = ({ userId }) => {
           country,
           days,
           budget,
-          checkIn,
-          checkOut,
-          preferences: Object.keys(preferences).filter((k) => preferences[k]),
+          preferences,
           itinerary: tripData.itinerary,
           hotels: tripData.itinerary?.recommended_hotels || [],
           heroImage: tripData.itinerary?.hero_image?.regular || null,
@@ -272,10 +266,10 @@ const TravelPlanner = ({ userId }) => {
     // Get LLM-generated recommended hotels (top 3)
     const hotels = tripData?.itinerary?.recommended_hotels || [];
 
-    console.log('Hotel data check:', {
+    console.log("Hotel data check:", {
       hasItinerary: !!tripData?.itinerary,
       recommendedHotels: tripData?.itinerary?.recommended_hotels,
-      hotelsLength: hotels.length
+      hotelsLength: hotels.length,
     });
 
     if (!hotels.length) {
@@ -372,7 +366,7 @@ const TravelPlanner = ({ userId }) => {
 
                   <div className="form-control">
                     <label className="label">
-                      <span className="label-text font-semibold">Country</span>
+                      <span className="label-text font-semibold">Country (optional)</span>
                     </label>
                     <input
                       type="text"
@@ -395,7 +389,7 @@ const TravelPlanner = ({ userId }) => {
                       max="30"
                       className="input input-bordered"
                       value={days}
-                      onChange={(e) => setDays(parseInt(e.target.value))}
+                      onChange={(e) => setDays(parseInt(e.target.value || '0'))}
                       required
                     />
                   </div>
@@ -415,33 +409,7 @@ const TravelPlanner = ({ userId }) => {
                     />
                   </div>
 
-                  <div className="form-control">
-                    <label className="label">
-                      <span className="label-text font-semibold">
-                        Check-in Date
-                      </span>
-                    </label>
-                    <input
-                      type="date"
-                      className="input input-bordered"
-                      value={checkIn}
-                      onChange={(e) => setCheckIn(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="form-control">
-                    <label className="label">
-                      <span className="label-text font-semibold">
-                        Check-out Date
-                      </span>
-                    </label>
-                    <input
-                      type="date"
-                      className="input input-bordered"
-                      value={checkOut}
-                      onChange={(e) => setCheckOut(e.target.value)}
-                    />
-                  </div>
+                  
                 </div>
 
                 <div className="form-control">
@@ -516,12 +484,8 @@ const TravelPlanner = ({ userId }) => {
             {/* Action Bar */}
             <div className="flex items-center justify-between bg-base-100 p-4 rounded-lg shadow">
               <div>
-                <h2 className="text-2xl font-bold uppercase">
-                  {destination}
-                </h2>
-                <p className="text-sm text-base-content/70">
-                  {days} days
-                </p>
+                <h2 className="text-2xl font-bold uppercase">{destination}</h2>
+                <p className="text-sm text-base-content/70">{days} days</p>
               </div>
               <div className="flex gap-2">
                 <button

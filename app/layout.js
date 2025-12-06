@@ -5,9 +5,9 @@ import Providers from "./providers";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "GPTGenius",
+  title: "TravelPlanner - AI Trip Planning",
   description:
-    "This app is powered by ChatGPT API. You can ask any question as you like and it will give you the best answer. You can also request your next vacation plans with the destinations of your choice and it will automatically create the trip plans with places to go to for you, which can be saved on the Postgre SQL DB on the cloud",
+    "Plan your perfect trip with AI-powered itinerary generation. Create detailed travel plans with top attractions, hotels, and daily schedules. Save your trips and access them anytime.",
 };
 
 export default function RootLayout({ children }) {
