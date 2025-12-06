@@ -68,3 +68,24 @@ model ChatSession {
   @@index([userId])
   @@index([createdAt])
 }
+
+model TripPlan {
+  id            String   @id @default(uuid())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  userId        String
+  destination   String
+  country       String
+  days          Int
+  budget        String?
+  checkIn       String?
+  checkOut      String?
+  preferences   Json?    // Array of preference strings
+  itinerary     Json     // Full itinerary object with daily_plans
+  hotels        Json?    // Array of hotel recommendations
+  heroImage     String?  // URL to hero image
+  title         String   // Generated trip title
+  
+  @@index([userId])
+  @@index([createdAt])
+}

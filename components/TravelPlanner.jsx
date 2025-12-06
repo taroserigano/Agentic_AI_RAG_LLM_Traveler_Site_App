@@ -23,8 +23,8 @@ const TravelPlanner = ({ userId }) => {
   // Data state
   const [isLoading, setIsLoading] = useState(false);
   const [tripData, setTripData] = useState(null);
-  const [activeTab, setActiveTab] = useState("itinerary");
   const [error, setError] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   const handlePreferenceToggle = (pref) => {
     setPreferences((prev) => ({
@@ -78,6 +78,42 @@ const TravelPlanner = ({ userId }) => {
       toast.error(err.message);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleSaveTrip = async () => {
+    if (!tripData) return;
+
+    setIsSaving(true);
+    try {
+      const response = await fetch("/api/travel/planner/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          destination,
+          country,
+          days,
+          budget,
+          checkIn,
+          checkOut,
+          preferences: Object.keys(preferences).filter((k) => preferences[k]),
+          itinerary: tripData.itinerary,
+          hotels: tripData.hotels,
+          heroImage: tripData.heroImage,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to save trip plan");
+      }
+
+      const data = await response.json();
+      toast.success("Trip plan saved successfully! 🎉");
+    } catch (err) {
+      console.error("Error saving trip:", err);
+      toast.error("Failed to save trip plan");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -232,8 +268,11 @@ const TravelPlanner = ({ userId }) => {
     );
   };
 
-  const renderHotels = () => {
-    if (!tripData?.hotels?.length) {
+  const renderRecommendedHotels = () => {
+    // Show top 5 hotels from the response
+    const hotels = tripData?.hotels?.slice(0, 5) || [];
+
+    if (!hotels.length) {
       return (
         <div className="text-center py-12">
           <p className="text-base-content/70">
@@ -244,154 +283,72 @@ const TravelPlanner = ({ userId }) => {
     }
 
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {tripData.hotels.map((hotel, idx) => (
-          <div key={idx} className="card bg-base-100 shadow-xl">
-            <div className="card-body">
-              <h3 className="card-title">{hotel.name}</h3>
-
-              {hotel.location && (
-                <p className="text-sm text-base-content/70">
-                  📍 {hotel.location.latitude?.toFixed(4)},{" "}
-                  {hotel.location.longitude?.toFixed(4)}
-                </p>
-              )}
-
-              {hotel.address && (
-                <div className="text-sm mt-2">
-                  <p>{hotel.address.lines?.join(", ")}</p>
-                  <p>
-                    {hotel.address.cityName}, {hotel.address.countryCode}
-                  </p>
-                </div>
-              )}
-
-              {hotel.price && (
-                <div className="mt-4">
-                  <div className="stat-value text-2xl text-primary">
-                    {hotel.price.currency} {hotel.price.total}
-                  </div>
-                  <div className="text-sm text-base-content/70">per night</div>
-                </div>
-              )}
-
-              {hotel.rating && (
-                <div className="flex items-center gap-2 mt-2">
-                  <div className="rating rating-sm">
-                    {[...Array(5)].map((_, i) => (
-                      <input
-                        key={i}
-                        type="radio"
-                        className="mask mask-star-2 bg-orange-400"
-                        checked={i < Math.round(hotel.rating)}
-                        readOnly
-                      />
-                    ))}
-                  </div>
-                  <span className="text-sm">({hotel.rating}/5)</span>
-                </div>
-              )}
-
-              <div className="card-actions justify-end mt-4">
-                <button className="btn btn-primary btn-sm">View Details</button>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  };
-
-  const renderFlights = () => {
-    if (!tripData?.flights?.length) {
-      return (
-        <div className="text-center py-12">
-          <p className="text-base-content/70">No flight options available</p>
-        </div>
-      );
-    }
-
-    return (
-      <div className="space-y-6">
-        {tripData.flights.map((flight, idx) => (
-          <div key={idx} className="card bg-base-100 shadow-xl">
-            <div className="card-body">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  {flight.itineraries?.map((itinerary, itinIdx) => (
-                    <div key={itinIdx} className="mb-6 last:mb-0">
-                      <div className="flex items-center gap-4 mb-4">
-                        <div className="badge badge-primary">
-                          {itinIdx === 0 ? "Outbound" : "Return"}
-                        </div>
-                        <span className="text-sm text-base-content/70">
-                          Duration: {itinerary.duration}
-                        </span>
-                      </div>
-
-                      {itinerary.segments?.map((segment, segIdx) => (
-                        <div
-                          key={segIdx}
-                          className="flex items-center gap-4 py-4 border-b last:border-b-0"
-                        >
-                          <div className="flex-1">
-                            <div className="flex items-center justify-between mb-2">
-                              <div>
-                                <p className="text-2xl font-bold">
-                                  {segment.departure?.airport}
-                                </p>
-                                <p className="text-sm text-base-content/70">
-                                  {new Date(
-                                    segment.departure?.time
-                                  ).toLocaleString()}
-                                </p>
-                              </div>
-
-                              <div className="text-center px-4">
-                                <div className="flex items-center gap-2">
-                                  <div className="w-16 h-px bg-base-content/30"></div>
-                                  <span className="text-sm">✈️</span>
-                                  <div className="w-16 h-px bg-base-content/30"></div>
-                                </div>
-                                <p className="text-xs mt-1 text-base-content/70">
-                                  {segment.carrier} {segment.flight_number}
-                                </p>
-                              </div>
-
-                              <div className="text-right">
-                                <p className="text-2xl font-bold">
-                                  {segment.arrival?.airport}
-                                </p>
-                                <p className="text-sm text-base-content/70">
-                                  {new Date(
-                                    segment.arrival?.time
-                                  ).toLocaleString()}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ))}
+      <div>
+        <h3 className="text-2xl font-bold mb-6">🏨 Recommended Hotels</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {hotels.map((hotel, idx) => (
+            <div
+              key={idx}
+              className="card bg-base-100 shadow-xl border border-base-300"
+            >
+              <div className="card-body">
+                <div className="flex items-start justify-between mb-2">
+                  <h3 className="card-title text-lg">{hotel.name}</h3>
+                  {hotel.rating && (
+                    <div className="badge badge-primary">{hotel.rating}⭐</div>
+                  )}
                 </div>
 
-                {flight.price && (
-                  <div className="ml-6 text-right">
-                    <div className="stat-value text-3xl text-primary">
-                      {flight.price.currency} {flight.price.total}
-                    </div>
-                    <div className="text-sm text-base-content/70">total</div>
+                {hotel.address && (
+                  <div className="text-sm mb-3">
+                    <p className="flex items-start gap-2">
+                      <span>📍</span>
+                      <span>
+                        {hotel.address.lines?.join(", ")}
+                        <br />
+                        {hotel.address.cityName}, {hotel.address.countryCode}
+                      </span>
+                    </p>
                   </div>
                 )}
-              </div>
 
-              <div className="card-actions justify-end mt-4">
-                <button className="btn btn-primary">Book Flight</button>
+                {hotel.price && (
+                  <div className="mt-3 p-3 bg-primary/10 rounded-lg">
+                    <div className="text-2xl font-bold text-primary">
+                      {hotel.price.currency} {hotel.price.total}
+                    </div>
+                    <div className="text-sm text-base-content/70">
+                      per night
+                    </div>
+                  </div>
+                )}
+
+                {hotel.amenities && hotel.amenities.length > 0 && (
+                  <div className="mt-3">
+                    <div className="flex flex-wrap gap-1">
+                      {hotel.amenities.slice(0, 3).map((amenity, i) => (
+                        <span key={i} className="badge badge-sm badge-outline">
+                          {amenity}
+                        </span>
+                      ))}
+                      {hotel.amenities.length > 3 && (
+                        <span className="badge badge-sm">
+                          +{hotel.amenities.length - 3} more
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                <div className="card-actions justify-end mt-4">
+                  <button className="btn btn-primary btn-sm">
+                    View Details
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     );
   };
@@ -557,60 +514,69 @@ const TravelPlanner = ({ userId }) => {
         {/* Trip Results */}
         {tripData && (
           <div className="space-y-6">
+            {/* Hero Image */}
+            {tripData.itinerary?.hero_image && (
+              <div className="relative w-full h-80 rounded-lg overflow-hidden shadow-xl">
+                <img
+                  src={tripData.itinerary.hero_image.regular}
+                  alt={
+                    tripData.itinerary.hero_image.alt_description ||
+                    `${destination} travel destination`
+                  }
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute bottom-0 left-0 bg-gradient-to-r from-black/80 to-transparent p-6">
+                  <h2 className="text-white text-5xl font-bold drop-shadow-2xl uppercase">
+                    {tripData.metadata?.destination || tripData.itinerary?.city}
+                  </h2>
+                </div>
+              </div>
+            )}
+
             {/* Action Bar */}
             <div className="flex items-center justify-between bg-base-100 p-4 rounded-lg shadow">
               <div>
-                <h2 className="text-2xl font-bold">
-                  {destination}, {country}
+                <h2 className="text-2xl font-bold uppercase">
+                  {destination}
                 </h2>
                 <p className="text-sm text-base-content/70">
-                  {days} days • {checkIn} to {checkOut}
+                  {days} days
                 </p>
               </div>
-              <button
-                onClick={() => {
-                  setTripData(null);
-                  setActiveTab("itinerary");
-                }}
-                className="btn btn-outline"
-              >
-                Plan New Trip
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleSaveTrip}
+                  disabled={isSaving}
+                  className="btn btn-primary"
+                >
+                  {isSaving ? (
+                    <>
+                      <span className="loading loading-spinner loading-sm"></span>
+                      Saving...
+                    </>
+                  ) : (
+                    <>💾 Save Trip</>
+                  )}
+                </button>
+                <button
+                  onClick={() => {
+                    setTripData(null);
+                  }}
+                  className="btn btn-outline"
+                >
+                  Plan New Trip
+                </button>
+              </div>
             </div>
 
-            {/* Tabs */}
-            <div className="tabs tabs-boxed bg-base-100 p-2 shadow">
-              <button
-                className={`tab tab-lg ${
-                  activeTab === "itinerary" ? "tab-active" : ""
-                }`}
-                onClick={() => setActiveTab("itinerary")}
-              >
-                📅 Daily Itinerary
-              </button>
-              <button
-                className={`tab tab-lg ${
-                  activeTab === "hotels" ? "tab-active" : ""
-                }`}
-                onClick={() => setActiveTab("hotels")}
-              >
-                🏨 Hotels ({tripData.hotels?.length || 0})
-              </button>
-              <button
-                className={`tab tab-lg ${
-                  activeTab === "flights" ? "tab-active" : ""
-                }`}
-                onClick={() => setActiveTab("flights")}
-              >
-                ✈️ Flights ({tripData.flights?.length || 0})
-              </button>
-            </div>
-
-            {/* Tab Content */}
+            {/* Itinerary Section */}
             <div className="bg-base-100 rounded-lg shadow-xl p-6">
-              {activeTab === "itinerary" && renderItinerary()}
-              {activeTab === "hotels" && renderHotels()}
-              {activeTab === "flights" && renderFlights()}
+              {renderItinerary()}
+            </div>
+
+            {/* Recommended Hotels Section */}
+            <div className="bg-base-100 rounded-lg shadow-xl p-6">
+              {renderRecommendedHotels()}
             </div>
           </div>
         )}

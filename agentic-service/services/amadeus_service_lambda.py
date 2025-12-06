@@ -211,6 +211,166 @@ class AmadeusService:
                 "hotels": []
             }
     
+    def search_hotel_offers(
+        self,
+        city_code: str,
+        check_in_date: str,
+        check_out_date: str,
+        adults: int = 1,
+        max_results: int = 5
+    ) -> Dict[str, Any]:
+        """
+        Search for hotel offers with pricing and availability.
+        
+        Args:
+            city_code: City code (e.g., 'NYC', 'LON', 'TYO')
+            check_in_date: Check-in date (YYYY-MM-DD)
+            check_out_date: Check-out date (YYYY-MM-DD)
+            adults: Number of guests
+            max_results: Maximum results
+        
+        Returns:
+            Dict with hotel offers including pricing
+        """
+        if not self.is_available():
+            return {"error": "Amadeus API not configured", "hotel_offers": []}
+        
+        try:
+            logger.info(f"Searching hotel offers in {city_code} for {check_in_date} to {check_out_date}")
+            
+            # Search for hotel offers with pricing
+            response = self.client.shopping.hotel_offers_search.get(
+                cityCode=city_code,
+                checkInDate=check_in_date,
+                checkOutDate=check_out_date,
+                adults=adults,
+                roomQuantity=1,
+                radius=50,
+                radiusUnit='KM',
+                currency='USD',
+                bestRateOnly=True
+            )
+            
+            hotel_offers = []
+            for offer in response.data[:max_results]:
+                hotel = offer.get('hotel', {})
+                offers = offer.get('offers', [])
+                
+                # Get best offer (first one since bestRateOnly=True)
+                best_offer = offers[0] if offers else {}
+                price = best_offer.get('price', {})
+                room = best_offer.get('room', {})
+                
+                hotel_data = {
+                    "hotel_id": hotel.get('hotelId'),
+                    "name": hotel.get('name'),
+                    "location": {
+                        "latitude": hotel.get('latitude'),
+                        "longitude": hotel.get('longitude')
+                    },
+                    "address": {
+                        "lines": [hotel.get('address', {}).get('lines', [''])[0]] if hotel.get('address') else [],
+                        "cityName": hotel.get('address', {}).get('cityName'),
+                        "countryCode": hotel.get('address', {}).get('countryCode')
+                    },
+                    "rating": hotel.get('rating'),
+                    "price": {
+                        "total": price.get('total'),
+                        "currency": price.get('currency'),
+                        "per_night": float(price.get('total', 0)) / max(1, (datetime.strptime(check_out_date, '%Y-%m-%d') - datetime.strptime(check_in_date, '%Y-%m-%d')).days) if price.get('total') else None
+                    },
+                    "room": {
+                        "type": room.get('typeEstimated', {}).get('category'),
+                        "beds": room.get('typeEstimated', {}).get('beds'),
+                        "bedType": room.get('typeEstimated', {}).get('bedType')
+                    },
+                    "amenities": hotel.get('amenities', [])
+                }
+                hotel_offers.append(hotel_data)
+            
+            logger.info(f"Found {len(hotel_offers)} hotel offer(s) with pricing")
+            return {
+                "hotel_offers": hotel_offers,
+                "search": {
+                    "city_code": city_code,
+                    "check_in": check_in_date,
+                    "check_out": check_out_date
+                }
+            }
+        
+        except ResponseError as error:
+            logger.error(f"Amadeus API error: {error}")
+            return {
+                "error": str(error),
+                "hotel_offers": []
+            }
+        except Exception as e:
+            logger.error(f"Hotel offers search failed: {e}", exc_info=True)
+            return {
+                "error": str(e),
+                "hotel_offers": []
+            }
+    
+    def get_flight_inspiration(
+        self,
+        origin: str,
+        max_destinations: int = 10
+    ) -> Dict[str, Any]:
+        """
+        Get cheapest flight destinations from an origin.
+        
+        Args:
+            origin: Origin airport code (e.g., 'LAX')
+            max_destinations: Maximum number of destinations to return
+        
+        Returns:
+            Dict with cheapest destination offers
+        """
+        if not self.is_available():
+            return {"error": "Amadeus API not configured", "destinations": []}
+        
+        try:
+            logger.info(f"Fetching flight inspiration from {origin}")
+            
+            response = self.client.shopping.flight_destinations.get(
+                origin=origin,
+                maxPrice=2000  # Max price in USD
+            )
+            
+            destinations = []
+            for dest in response.data[:max_destinations]:
+                destination_data = {
+                    "destination": dest.get('destination'),
+                    "origin": dest.get('origin'),
+                    "price": {
+                        "total": dest.get('price', {}).get('total'),
+                        "currency": "USD"
+                    },
+                    "departure_date": dest.get('departureDate'),
+                    "return_date": dest.get('returnDate'),
+                    "type": dest.get('type')  # One-way or round-trip
+                }
+                destinations.append(destination_data)
+            
+            logger.info(f"Found {len(destinations)} flight inspiration destination(s)")
+            return {
+                "destinations": destinations,
+                "origin": origin
+            }
+        
+        except ResponseError as error:
+            logger.error(f"Amadeus API error: {error}")
+            return {
+                "error": str(error),
+                "destinations": []
+            }
+        except Exception as e:
+            logger.error(f"Flight inspiration search failed: {e}", exc_info=True)
+            return {
+                "error": str(e),
+                "destinations": []
+            }
+    
     def get_airport_code(self, city_name: str) -> Optional[str]:
         """
         Get IATA airport code for a city (simplified mapping).

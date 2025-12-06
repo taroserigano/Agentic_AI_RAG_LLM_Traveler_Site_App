@@ -12,6 +12,7 @@ import openai
 
 from config_lambda import settings
 from services.amadeus_service_lambda import amadeus_service
+from services.unsplash_service import unsplash_service
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +45,15 @@ class SimplePlanner:
         # Get real travel data from Amadeus if available
         flight_data = None
         hotel_data = None
+        hero_image = None
+        
+        # Fetch hero image from Unsplash (parallel with Amadeus calls)
+        try:
+            hero_image = unsplash_service.get_destination_image(city, country)
+            if hero_image:
+                logger.info(f"[{run_id}] Hero image fetched: {hero_image['photographer']}")
+        except Exception as e:
+            logger.warning(f"[{run_id}] Failed to fetch hero image: {e}")
         
         if amadeus_service.is_available():
             try:
@@ -66,14 +76,14 @@ class SimplePlanner:
                         max_results=3
                     )
                 
-                # Search for hotels
-                # Get city code (first 3 letters uppercase)
+                # Search for hotels (basic info)
                 city_code = city[:3].upper()
                 logger.info(f"[{run_id}] Fetching real hotel data...")
                 hotel_data = amadeus_service.search_hotels(
                     city_code=city_code,
                     max_results=5
                 )
+                
             except Exception as e:
                 logger.warning(f"[{run_id}] Could not fetch Amadeus data: {e}")
         
@@ -300,7 +310,8 @@ Return the itinerary as JSON following the specified format."""
                     "flights": flight_data.get("flights", []) if flight_data else [],
                     "hotels": hotel_data.get("hotels", []) if hotel_data else [],
                     "has_real_data": bool(flight_data or hotel_data)
-                }
+                },
+                "hero_image": hero_image  # Unsplash image data
             }
             
             result = {

@@ -55,50 +55,57 @@ export async function POST(request) {
       if (planResponse.ok) {
         const backendData = await planResponse.json();
         // Backend returns { run_id, tour, cost }
-        
+
         // Transform Lambda response to match frontend expectations
         const tour = backendData.tour || backendData.itinerary || backendData;
-        
+
         // Lambda returns daily_plans[].plan[] but frontend expects daily_plans[].activities[]
         // Also need to map field names: activity -> name, notes -> description
         if (tour.daily_plans) {
-          tour.daily_plans = tour.daily_plans.map(day => ({
+          tour.daily_plans = tour.daily_plans.map((day) => ({
             ...day,
             title: day.theme || day.title, // Ensure title exists
-            activities: (day.plan || day.activities || []).map(activity => ({
+            activities: (day.plan || day.activities || []).map((activity) => ({
               time: activity.time,
               name: activity.activity || activity.name,
               description: activity.notes || activity.description,
-              location: typeof activity.location === 'string' 
-                ? { address: activity.location, type: 'location' }
-                : activity.location,
-              duration: activity.duration
-            }))
+              location:
+                typeof activity.location === "string"
+                  ? { address: activity.location, type: "location" }
+                  : activity.location,
+              duration: activity.duration,
+            })),
           }));
         }
-        
+
         // Fallback: if daily_plans doesn't exist, use daily_schedule
         if (!tour.daily_plans && tour.daily_schedule) {
-          tour.daily_plans = tour.daily_schedule.map(day => ({
+          tour.daily_plans = tour.daily_schedule.map((day) => ({
             ...day,
             title: day.theme || day.title,
-            activities: (day.activities || []).map(activity => ({
+            activities: (day.activities || []).map((activity) => ({
               time: activity.time,
               name: activity.activity || activity.name,
               description: activity.notes || activity.description,
-              location: typeof activity.location === 'string' 
-                ? { address: activity.location, type: 'location' }
-                : activity.location,
-              duration: activity.duration
-            }))
+              location:
+                typeof activity.location === "string"
+                  ? { address: activity.location, type: "location" }
+                  : activity.location,
+              duration: activity.duration,
+            })),
           }));
         }
-        
+
         itineraryData = {
           itinerary: tour,
           run_id: backendData.run_id,
           cost: backendData.cost,
         };
+
+        // Extract hero image from tour if available
+        if (tour.hero_image) {
+          itineraryData.itinerary.hero_image = tour.hero_image;
+        }
       } else {
         console.warn("Agentic service unavailable, using fallback");
         // Generate a simple fallback itinerary

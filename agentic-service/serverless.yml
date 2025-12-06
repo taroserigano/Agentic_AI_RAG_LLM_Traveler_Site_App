@@ -1,5 +1,5 @@
 service: agentic-travel-planner
-frameworkVersion: '3'
+frameworkVersion: "3"
 
 provider:
   name: aws
@@ -13,6 +13,7 @@ provider:
     AMADEUS_API_SECRET: ${env:AMADEUS_API_SECRET}
     GOOGLE_MAPS_API_KEY: ${env:GOOGLE_MAPS_API_KEY}
     OPENWEATHER_API_KEY: ${env:OPENWEATHER_API_KEY}
+    UNSPLASH_ACCESS_KEY: ${env:UNSPLASH_ACCESS_KEY}
 
 functions:
   api:
@@ -40,24 +41,24 @@ custom:
 package:
   individually: false
   patterns:
-    - '!node_modules/**'
-    - '!.venv/**'
-    - '!__pycache__/**'
-    - '!.pytest_cache/**'
-    - '!tests/**'
-    - '!.env'
-    - '!data/**'
-    - '!.serverless-cache/**'
-    - '!services/vault.py'
-    - '!config.py'
-    - '!agents/planner.py'
-    - '!agents/tools.py'
-    - '!agents/state.py'
-    - '!agents/__init__.py'
-    - 'main_lambda.py'
-    - 'config_lambda.py'
-    - 'lambda_handler.py'
-    - 'agents/__init__lambda.py'
-    - 'agents/simple_planner_lambda.py'
-    - 'services/amadeus_service_lambda.py'
-    - 'services/__init__.py'
+    - "!node_modules/**"
+    - "!.venv/**"
+    - "!__pycache__/**"
+    - "!.pytest_cache/**"
+    - "!tests/**"
+    - "!.env"
+    - "!data/**"
+    - "!.serverless-cache/**"
+    - "!services/vault.py"
+    - "!config.py"
+    - "!agents/planner.py"
+    - "!agents/tools.py"
+    - "!agents/state.py"
+    - "!agents/__init__.py"
+    - "main_lambda.py"
+    - "config_lambda.py"
+    - "lambda_handler.py"
+    - "agents/__init__lambda.py"
+    - "agents/simple_planner_lambda.py"
+    - "services/amadeus_service_lambda.py"
+    - "services/__init__.py"
