@@ -1,4 +1,8 @@
 {
   "extends": "next/core-web-vitals",
-  "ignorePatterns": ["agentic-service/**"]
+  "ignorePatterns": ["agentic-service/**"],
+  "rules": {
+    "react-hooks/exhaustive-deps": "warn",
+    "@next/next/no-img-element": "warn"
+  }
 }

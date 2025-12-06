@@ -107,3 +107,4 @@ agentic-service/*.log
 
 # Node modules in agentic-service
 agentic-service/node_modules/
+.env.production
