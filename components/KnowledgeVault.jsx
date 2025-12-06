@@ -578,7 +578,7 @@ const KnowledgeVault = ({ userId, initialDocuments }) => {
                     <div className="text-center text-base-content/50 py-12">
                       <p className="text-lg mb-2">💬 Start a conversation</p>
                       <p className="text-sm">
-                        Try: "What are the best attractions in Tokyo?"
+                        Try: &ldquo;What are the best attractions in Tokyo?&rdquo;
                       </p>
                     </div>
                   ) : (
@@ -678,7 +678,7 @@ const KnowledgeVault = ({ userId, initialDocuments }) => {
                     ></path>
                   </svg>
                   <span>
-                    Upload PDFs, DOCX, or text files. They'll be chunked,
+                    Upload PDFs, DOCX, or text files. They&apos;ll be chunked,
                     embedded, and stored in your FAISS index.
                   </span>
                 </div>
