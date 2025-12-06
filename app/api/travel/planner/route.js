@@ -4,6 +4,8 @@ import { NextResponse } from "next/server";
 const AGENTIC_SERVICE_URL =
   process.env.AGENTIC_SERVICE_URL || "http://localhost:8000";
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request) {
   // Allow a local bypass for auth when DEV_BYPASS_AUTH=1 is set (for testing only)
   let userId;
