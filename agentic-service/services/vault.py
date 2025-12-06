@@ -7,7 +7,7 @@ from typing import Optional, Sequence, List, Dict, Any, Generator
 import json
 
 from fastapi import UploadFile
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from pypdf import PdfReader
 from docx import Document
 import openai

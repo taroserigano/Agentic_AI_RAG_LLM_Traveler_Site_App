@@ -1,0 +1,63 @@
+service: agentic-travel-planner
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: python3.11
+  region: us-east-1
+  timeout: 300
+  memorySize: 1024
+  environment:
+    OPENAI_API_KEY: ${env:OPENAI_API_KEY}
+    AMADEUS_API_KEY: ${env:AMADEUS_API_KEY}
+    AMADEUS_API_SECRET: ${env:AMADEUS_API_SECRET}
+    GOOGLE_MAPS_API_KEY: ${env:GOOGLE_MAPS_API_KEY}
+    OPENWEATHER_API_KEY: ${env:OPENWEATHER_API_KEY}
+
+functions:
+  api:
+    handler: lambda_handler.handler
+    timeout: 900
+    layers:
+      - { Ref: PythonRequirementsLambdaLayer }
+    url:
+      cors: true
+
+plugins:
+  - serverless-python-requirements
+
+custom:
+  pythonRequirements:
+    dockerizePip: true
+    layer: true
+    slim: true
+    strip: false
+    fileName: requirements-lambda.txt
+    useStaticCache: true
+    useDownloadCache: true
+    cacheLocation: ./.serverless-cache
+
+package:
+  individually: false
+  patterns:
+    - '!node_modules/**'
+    - '!.venv/**'
+    - '!__pycache__/**'
+    - '!.pytest_cache/**'
+    - '!tests/**'
+    - '!.env'
+    - '!data/**'
+    - '!.serverless-cache/**'
+    - '!services/vault.py'
+    - '!config.py'
+    - '!agents/planner.py'
+    - '!agents/tools.py'
+    - '!agents/state.py'
+    - '!agents/__init__.py'
+    - 'main_lambda.py'
+    - 'config_lambda.py'
+    - 'lambda_handler.py'
+    - 'agents/__init__lambda.py'
+    - 'agents/simple_planner_lambda.py'
+    - 'services/amadeus_service_lambda.py'
+    - 'services/__init__.py'

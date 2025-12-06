@@ -1,0 +1,18 @@
+# Lambda requirements with flexible versions
+# Core FastAPI
+fastapi>=0.109.0
+pydantic>=2.5.0
+pydantic-settings>=2.1.0
+mangum>=0.17.0
+python-multipart>=0.0.6
+
+# OpenAI (no langchain, no tiktoken to avoid Rust compilation)
+openai>=1.10.0
+
+# Utilities
+python-dotenv>=1.0.0
+httpx>=0.26.0
+tenacity>=8.2.0
+
+# Travel APIs
+amadeus>=8.0.0

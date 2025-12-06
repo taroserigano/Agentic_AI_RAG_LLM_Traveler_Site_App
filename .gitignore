@@ -57,3 +57,53 @@ agentic-service/faiss_index/
 # Test files
 test-doc.txt
 test-*.txt
+
+# -----------------------------------------------------------------------------
+# Additional ignores
+# -----------------------------------------------------------------------------
+
+# OS / desktop
+Thumbs.db
+desktop.ini
+ehthumbs.db
+
+# Common Python venv names
+.venv/
+venv/
+env/
+ENV/
+
+# Packaging / build artifacts
+*.egg-info/
+dist/
+build/
+agentic-service/dist/
+
+# Tool caches
+.cache/
+.parcel-cache/
+
+# Local environment overrides
+.env.local
+.env.*.local
+
+# JetBrains workspace files
+.idea/*workspace.xml
+
+# Serverless deployment artifacts
+.serverless/
+agentic-service/.serverless/
+
+# Lambda build artifacts
+agentic-service/.requirements.zip
+agentic-service/.serverless-cache/
+
+# Log files
+*.log
+agentic-service/*.log
+
+# Backup files
+*.bak
+
+# Node modules in agentic-service
+agentic-service/node_modules/

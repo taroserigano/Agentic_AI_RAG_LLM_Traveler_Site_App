@@ -8,12 +8,18 @@ import typing
 from pathlib import Path
 from typing import Optional, Dict, Any
 
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Query
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
+from fastapi.responses import StreamingResponse, JSONResponse
+from fastapi.exceptions import RequestValidationError
+from pydantic import BaseModel, ValidationError
 
 from config import settings
+
+# Initialize logging before any code that might raise exceptions
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 if sys.version_info >= (3, 12):
     _native_forward_eval = typing.ForwardRef._evaluate
 
@@ -44,14 +50,21 @@ except Exception as planner_import_error:  # noqa: BLE001
 else:
     planner_initialization_error: Optional[Exception] = None
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
 app = FastAPI(
     title="Agentic Travel Planner",
     description="Multi-agent LangGraph service for itinerary generation",
     version="0.1.0"
 )
+
+# Add validation error handler for debugging
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    logger.error(f"Validation error for {request.url}: {exc.errors()}")
+    logger.error(f"Request body: {await request.body()}")
+    return JSONResponse(
+        status_code=422,
+        content={"detail": exc.errors(), "body": str(await request.body())}
+    )
 
 # CORS for Next.js frontend
 app.add_middleware(
@@ -82,7 +95,8 @@ class PlanRequest(BaseModel):
     country: str
     days: int = 3
     budget: Optional[float] = None
-    preferences: Optional[Dict[str, Any]] = None
+    # Accept dict or list and normalize later so the frontend can send arrays
+    preferences: Optional[Any] = None
     user_id: Optional[str] = None
 
 
@@ -169,12 +183,16 @@ async def create_plan(request: PlanRequest):
     try:
         logger.info(f"Planning request: {request.city}, {request.country} ({request.days} days)")
         
+        prefs = request.preferences or {}
+        if isinstance(prefs, list):
+            prefs = {"tags": prefs}
+
         result = await planner.generate_itinerary(
             city=request.city,
             country=request.country,
             days=request.days,
             budget=request.budget,
-            preferences=request.preferences or {},
+            preferences=prefs,
             user_id=request.user_id
         )
         
