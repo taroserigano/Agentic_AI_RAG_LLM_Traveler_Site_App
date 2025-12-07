@@ -1,7 +1,8 @@
 // Test script to verify travel preferences are working
 // Run with: node test-preferences.js
 
-const AGENTIC_SERVICE_URL = process.env.AGENTIC_SERVICE_URL || "https://your-lambda-url.amazonaws.com";
+const AGENTIC_SERVICE_URL =
+  process.env.AGENTIC_SERVICE_URL || "https://your-lambda-url.amazonaws.com";
 
 async function testPreferences() {
   console.log("Testing Travel Preferences Flow\n");
@@ -27,14 +28,14 @@ async function testPreferences() {
       const data = await response.json();
       console.log("✓ Lambda service responded successfully");
       console.log("  Response structure:", Object.keys(data));
-      
+
       // Check if preferences influenced the output
       const tour = data.tour || data.itinerary || data;
       if (tour.daily_plans) {
         console.log("  Daily plans found:", tour.daily_plans.length);
-        const themes = tour.daily_plans.map(d => d.theme).join(", ");
+        const themes = tour.daily_plans.map((d) => d.theme).join(", ");
         console.log("  Themes:", themes);
-        
+
         // Check if themes relate to preferences
         const hasFood = themes.toLowerCase().includes("food");
         const hasCulture = themes.toLowerCase().includes("culture");
@@ -45,8 +46,13 @@ async function testPreferences() {
         }
       }
     } else {
-      console.log("✗ Lambda service unavailable or returned error:", response.status);
-      console.log("  This is expected if Lambda doesn't handle preferences parameter");
+      console.log(
+        "✗ Lambda service unavailable or returned error:",
+        response.status
+      );
+      console.log(
+        "  This is expected if Lambda doesn't handle preferences parameter"
+      );
     }
   } catch (err) {
     console.log("✗ Lambda service error:", err.message);
@@ -56,14 +62,18 @@ async function testPreferences() {
 
   // Test 2: Check fallback generator logic
   console.log("Test 2: Analyzing fallback generator code...");
-  const fs = require('fs');
-  const routeCode = fs.readFileSync('./app/api/travel/planner/route.js', 'utf8');
-  
+  const fs = require("fs");
+  const routeCode = fs.readFileSync(
+    "./app/api/travel/planner/route.js",
+    "utf8"
+  );
+
   // Check if preferences are passed to fallback
-  const hasFallbackPreferences = routeCode.includes('generateFallbackItinerary') && 
-                                  routeCode.includes('preferences');
-  const hasActivityDatabase = routeCode.includes('activityDatabase');
-  const hasPreferenceMapping = routeCode.includes('selectedPreferences');
+  const hasFallbackPreferences =
+    routeCode.includes("generateFallbackItinerary") &&
+    routeCode.includes("preferences");
+  const hasActivityDatabase = routeCode.includes("activityDatabase");
+  const hasPreferenceMapping = routeCode.includes("selectedPreferences");
 
   if (hasFallbackPreferences && hasActivityDatabase && hasPreferenceMapping) {
     console.log("✓ Fallback generator DOES use preferences");
@@ -78,12 +88,17 @@ async function testPreferences() {
 
   // Test 3: Check frontend preferences state
   console.log("Test 3: Analyzing frontend preferences logic...");
-  const componentCode = fs.readFileSync('./components/TravelPlanner.jsx', 'utf8');
-  
-  const hasPreferenceState = componentCode.includes('preferences') && 
-                              componentCode.includes('useState');
-  const hasPreferenceToggle = componentCode.includes('handlePreferenceToggle');
-  const sendsPreferences = componentCode.includes('preferences: Object.keys(preferences).filter');
+  const componentCode = fs.readFileSync(
+    "./components/TravelPlanner.jsx",
+    "utf8"
+  );
+
+  const hasPreferenceState =
+    componentCode.includes("preferences") && componentCode.includes("useState");
+  const hasPreferenceToggle = componentCode.includes("handlePreferenceToggle");
+  const sendsPreferences = componentCode.includes(
+    "preferences: Object.keys(preferences).filter"
+  );
 
   if (hasPreferenceState && hasPreferenceToggle && sendsPreferences) {
     console.log("✓ Frontend DOES send preferences");
@@ -101,19 +116,25 @@ async function testPreferences() {
 
   // Final assessment
   const fallbackWorks = hasFallbackPreferences && hasActivityDatabase;
-  const frontendWorks = hasPreferenceState && hasPreferenceToggle && sendsPreferences;
+  const frontendWorks =
+    hasPreferenceState && hasPreferenceToggle && sendsPreferences;
 
   if (fallbackWorks && frontendWorks) {
     console.log("✓ Travel preferences ARE working in code");
     console.log("  - Frontend correctly sends selected preferences");
     console.log("  - Fallback generator uses them to select activities");
-    console.log("  - Lambda service MAY OR MAY NOT use them (depends on Lambda implementation)");
-    console.log("\nNote: The effectiveness depends on whether your Lambda planner");
+    console.log(
+      "  - Lambda service MAY OR MAY NOT use them (depends on Lambda implementation)"
+    );
+    console.log(
+      "\nNote: The effectiveness depends on whether your Lambda planner"
+    );
     console.log("actually uses the 'preferences' parameter in its LLM prompt.");
   } else {
     console.log("✗ Travel preferences are NOT fully working");
     if (!frontendWorks) console.log("  - Frontend preferences logic is broken");
-    if (!fallbackWorks) console.log("  - Backend fallback doesn't use preferences");
+    if (!fallbackWorks)
+      console.log("  - Backend fallback doesn't use preferences");
   }
 }
 

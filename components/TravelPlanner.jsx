@@ -366,7 +366,9 @@ const TravelPlanner = ({ userId }) => {
 
                   <div className="form-control">
                     <label className="label">
-                      <span className="label-text font-semibold">Country (optional)</span>
+                      <span className="label-text font-semibold">
+                        Country (optional)
+                      </span>
                     </label>
                     <input
                       type="text"
@@ -389,7 +391,7 @@ const TravelPlanner = ({ userId }) => {
                       max="30"
                       className="input input-bordered"
                       value={days}
-                      onChange={(e) => setDays(parseInt(e.target.value || '0'))}
+                      onChange={(e) => setDays(parseInt(e.target.value || "0"))}
                       required
                     />
                   </div>
@@ -408,8 +410,6 @@ const TravelPlanner = ({ userId }) => {
                       onChange={(e) => setBudget(e.target.value)}
                     />
                   </div>
-
-                  
                 </div>
 
                 <div className="form-control">

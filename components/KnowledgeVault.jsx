@@ -276,7 +276,10 @@ const KnowledgeVault = ({ userId, initialDocuments }) => {
                 return updated;
               });
               // Generate follow-up questions
-              generateFollowUpQuestions(trimmedQuery, chatMessages[assistantMessageIndex]?.content || "");
+              generateFollowUpQuestions(
+                trimmedQuery,
+                chatMessages[assistantMessageIndex]?.content || ""
+              );
             } else if (event.type === "error") {
               throw new Error(event.content);
             }
@@ -309,7 +312,7 @@ const KnowledgeVault = ({ userId, initialDocuments }) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query: userQuery, answer: assistantResponse }),
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         setFollowUpQuestions(data.questions || []);
@@ -334,7 +337,7 @@ const KnowledgeVault = ({ userId, initialDocuments }) => {
 
       // Fetch document content
       const response = await fetch(`/api/vault/documents/${doc.id}/preview`);
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || "Failed to load document preview");
@@ -459,9 +462,7 @@ const KnowledgeVault = ({ userId, initialDocuments }) => {
           {/* Tab Content */}
           <div className="p-6">
             {/* Travel Agent Tab */}
-            {activeTab === "travel" && (
-              <TravelAgent userId={userId} />
-            )}
+            {activeTab === "travel" && <TravelAgent userId={userId} />}
 
             {/* Chat Tab */}
             {activeTab === "chat" && (
@@ -578,7 +579,8 @@ const KnowledgeVault = ({ userId, initialDocuments }) => {
                     <div className="text-center text-base-content/50 py-12">
                       <p className="text-lg mb-2">💬 Start a conversation</p>
                       <p className="text-sm">
-                        Try: &ldquo;What are the best attractions in Tokyo?&rdquo;
+                        Try: &ldquo;What are the best attractions in
+                        Tokyo?&rdquo;
                       </p>
                     </div>
                   ) : (
@@ -869,7 +871,7 @@ const KnowledgeVault = ({ userId, initialDocuments }) => {
             <h3 className="font-bold text-lg mb-4">
               📄 {previewDocument.title}
             </h3>
-            
+
             <div className="space-y-4 flex-1 overflow-y-auto">
               {/* Document Metadata */}
               <div className="bg-base-200 rounded-lg p-4">
