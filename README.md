@@ -1,6 +1,6 @@
-# Agentic AI Travel Planner App
+# Agentic AI Travel Planner App with FastAPI LLM Microservice API
 
-An intelligent travel planning application that generates personalized trip itineraries using LLM, LangGraph, multi-agents and orchestration and saves them for future reference.
+An intelligent travel planning application that generates personalized trip itineraries using LLM, LangGraph, multi-agents orchestration, and Fast-API microservice API hosted on AWS Serverless Lambda.and saves them for future reference. 
 
 ## Prompt your travel plans
 <img width="1899" height="943" alt="image" src="https://github.com/user-attachments/assets/c12b77de-2f0d-4831-80c3-551fb2e2ec8e" />
