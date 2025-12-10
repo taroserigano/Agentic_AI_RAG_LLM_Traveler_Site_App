@@ -1,6 +1,6 @@
 # Agentic AI Travel Planner App
 
-An intelligent travel planning application that generates personalized trip itineraries using AI and saves them for future reference.
+An intelligent travel planning application that generates personalized trip itineraries using LLM, LangGraph, multi-agents and orchestration and saves them for future reference.
 
 ![Travel Planner](https://github.com/taroserigano/Next.js-ChatGPT_App-Master/blob/main/img/tours1.jpg)
 
