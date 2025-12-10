@@ -2,7 +2,10 @@
 
 An intelligent travel planning application that generates personalized trip itineraries using LLM, LangGraph, multi-agents and orchestration and saves them for future reference.
 
-![Travel Planner](https://github.com/taroserigano/Next.js-ChatGPT_App-Master/blob/main/img/tours1.jpg)
+
+<img width="1899" height="943" alt="image" src="https://github.com/user-attachments/assets/c12b77de-2f0d-4831-80c3-551fb2e2ec8e" />
+<img width="1896" height="948" alt="image" src="https://github.com/user-attachments/assets/4a406be9-59f3-4a7e-9132-13569fa67a03" />
+<img width="1911" height="912" alt="image" src="https://github.com/user-attachments/assets/00923a8d-5152-499e-855f-b9c894643235" />
 
 ## Features
 
