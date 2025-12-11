@@ -1,4 +1,4 @@
-# Agentic AI Travel Planner App with FastAPI LLM Microservice API
+# Agentic AI Travel Planner App with FastAPI Microservice (for Agentic AI)
 
 **An intelligent, agentic travel-planning application powered by _🤖 LLMs_, _🧠 LangGraph_, and a orchestrated _👥 multi-agent architecture_ that generates fully personalized trip itineraries.**  
 
